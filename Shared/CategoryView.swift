@@ -21,6 +21,8 @@ struct CategoryView: View {
     var items: [Item] {
         return category.items?.allObjects as? [Item] ?? []
     }
+    
+    // sortedItems is State for animation purposes
     @State var sortedItems: [Item] = []
     
     var body: some View {
@@ -38,8 +40,8 @@ struct CategoryView: View {
                             state.selectedCategory = nil
                             state.selectedItem = nil
                         } label: {
-                            Image(systemName: "arrowshape.turn.up.backward").font(Font.system(.title))
-                        }.padding()
+                            Image(systemName: "arrowshape.turn.up.backward").font(Font.system(.title)).padding()
+                        }
 
                         Spacer()
 
@@ -73,7 +75,7 @@ struct CategoryView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding()
                 }
-                if items.isEmpty {
+                if sortedItems.isEmpty {
                     Spacer()
                     
                     Text("Add your first practice item (examples: C Major Scale, Mary Had a Little Lamb, etc.)")
@@ -87,6 +89,7 @@ struct CategoryView: View {
                     VStack(spacing: 0) {
                         ForEach(Array(sortedItems.enumerated()), id: \.1.id) { (index, item) in
                             // Make sure the item is still available. It may have been deleted.
+                            // This is pretty hacky but it prevents a crash.
                             if item.name != nil {
                                 let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
 
@@ -94,18 +97,30 @@ struct CategoryView: View {
                                     let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
                                     if !practicedToday {
                                         Button() {
+                                            // Practice today
+                                            item.lastLastPractice = item.lastPractice
                                             item.lastPractice = Date()
                                             try? moc.save()
                                             withAnimation(.easeIn) {
                                                 sortedItems = sortItems()
                                             }
+                                            state.changedCounter += 1
                                         } label: {
                                             Image(systemName: "circle").font(Font.system(.title2))
                                         }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
                                     } else {
-                                        Image(systemName: "checkmark.circle")
-                                            .font(Font.system(.title2))
-                                            .foregroundColor(.blue)
+                                        Button() {
+                                            // Undo practice today
+                                            item.lastPractice = item.lastLastPractice
+                                            item.lastLastPractice = nil
+                                            try? moc.save()
+                                            withAnimation(.easeIn) {
+                                                sortedItems = sortItems()
+                                            }
+                                            state.changedCounter += 1
+                                        } label: {
+                                            Image(systemName: "checkmark.circle").font(Font.system(.title2))
+                                        }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
                                     }
 
                                     let color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
