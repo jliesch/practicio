@@ -33,19 +33,13 @@ struct ItemView: View {
                 
                 Spacer()
 
-                TextField("Item title", text: $title).focused($itemTitleInFocus).font(.title2).foregroundColor(Color("TextColor"))
-
-                if let lastPractice = item.lastPractice {
-                    let days = ItemAge(lastPractice)
-                    let isPlural = days != 1
-                    Text(String(format: "Last practiced: %d day%@ ago", days, isPlural ? "s" : "")).myText().padding([.top, .bottom])
-                } else {
-                    Text("Last Practiced: Never").myText().padding([.top, .bottom])
-                }
+                TextField("Item title", text: $title)
+                    .focused($itemTitleInFocus)
+                    .font(.title2)
+                    .foregroundColor(Color("TextColor"))
+                Text(lastPracticed).myText().padding([.top, .bottom])
+                Text(displayFrequency).myText()
                 
-                let displayFrequency: Double = round(10.0 / ItemView.sliderToFrequency(relativeFrequency)) / 10.0
-                let frequencyText: String = displayFrequency > 1.1 ? " (more often)" : displayFrequency < 0.9 ? " (less often)" : ""
-                Text(String(format: "Practice frequency: %.1fx%@", displayFrequency, frequencyText)).myText()
                 ZStack {
                     Slider(value: $relativeFrequency, in: 0.0...1.0)
                     HStack {
@@ -62,7 +56,9 @@ struct ItemView: View {
                 }
                 
                 Text("Notes").myText()
-                TextEditor(text: $notes).frame(minHeight: geometry.size.height * 0.10, maxHeight: geometry.size.height * 0.20)
+                TextEditor(text: $notes)
+                    .frame(minHeight: geometry.size.height * 0.10,
+                           maxHeight: geometry.size.height * 0.20)
                 
                 Spacer()
 
@@ -81,7 +77,10 @@ struct ItemView: View {
                     }
                     Spacer()
                 }
-            }.ignoresSafeArea(.keyboard).padding().onAppear {
+            }
+            .ignoresSafeArea(.keyboard)
+            .padding()
+            .onAppear {
                 // Delay selecting title a bit, otherwise it doesn't receive focus
                 Task {
                     try await Task.sleep(nanoseconds: 1_000_000_000)
@@ -125,6 +124,7 @@ struct ItemView: View {
         }
     }
     
+    // Maps 0.0...1.0 to 0.1...10.0
     static func sliderToFrequency(_ frequency: Double) -> Double {
         let invFrequency = 1.0 - frequency
         if invFrequency < 0.5 {
@@ -135,19 +135,28 @@ struct ItemView: View {
             return Constants.avgFrequency
         }
     }
-
-    var frequencyName: String {
-        if relativeFrequency < 0.2 {
-            return "Usually"
-        } else if relativeFrequency < 0.4 {
-            return "Routinely"
-        } else if relativeFrequency < 0.6 {
-            return "Ordinarily"
-        }
-        else if relativeFrequency < 0.8 {
-            return "Occasionally"
+    
+    var lastPracticed: String {
+        if let lastPractice = item.lastPractice {
+            let days = ItemAge(lastPractice)
+            if days == 0 {
+                return "Last practiced: Today"
+            } else {
+                return String(format: "Last practiced: %d day%@ ago", days, days > 1 ? "s" : "")
+            }
         } else {
-            return "Rarely"
+            return "Last Practiced: Never"
+        }
+    }
+    
+    var displayFrequency: String {
+        let displayFrequency: Double = round(10.0 / ItemView.sliderToFrequency(relativeFrequency)) / 10.0
+        if displayFrequency > 1.1 {
+            return String(format: "Practice frequency: %.1fx (more often)", displayFrequency)
+        } else if displayFrequency < 0.9 {
+            return String(format: "Practice frequency: %.1fx (less often)", displayFrequency)
+        } else {
+            return String(format: "Practice frequency: %.1fx", displayFrequency)
         }
     }
 }
