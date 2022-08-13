@@ -31,7 +31,8 @@ struct CategoryView: View {
                     .multilineTextAlignment(.center)
                     .focused($categoryTitleInFocus)
                     .font(.title)
-                    .foregroundColor(Color("TextColor")).padding()
+                    .foregroundColor(Color("TextColor"))
+                    .padding()
 
                 HStack(alignment: .center) {
                     Button() {
@@ -119,11 +120,6 @@ struct CategoryView: View {
             withAnimation(.easeIn) {
                 sortedItems = sortItems()
             }
-        }.sheet(isPresented: Binding<Bool>(get: { state.selectedItem != nil }, set: { _ in }),
-                onDismiss: { state.selectedItem = nil }) {
-            ItemView(item: state.selectedItem!)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(10.0)
         }.onAppear {
             sortedItems = sortItems()
         }
@@ -212,11 +208,20 @@ struct CategoryView: View {
                 }
             } label: {
                 HStack {
-                    Text(item.name ?? "Unknown")
-                        .foregroundColor(color)
-                        .myText()
-                        .strikethrough(practicedToday)
-                    Spacer()
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text(item.name ?? "Unknown")
+                                .foregroundColor(color)
+                                .myText()
+                                .strikethrough(practicedToday)
+                            Spacer()
+                        }
+                        if let notes = item.notes {
+                            Text(notes)
+                                .foregroundColor(.gray)
+                                .myText()
+                        }
+                    }
                     Image(systemName: "chevron.right").foregroundColor(.blue)
                 }
             }

@@ -11,7 +11,9 @@ struct ContentView: View {
     @EnvironmentObject var state: AppState
     
     var body: some View {
-        if let category = state.selectedCategory {
+        if let item = state.selectedItem {
+            ItemView(item: item)
+        } else if let category = state.selectedCategory {
             CategoryView(category: category)
         } else {
             CategoriesView()

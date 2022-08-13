@@ -28,38 +28,55 @@ struct ItemView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            VStack(alignment: .leading) {
-                TextField("Item title", text: $title)
-                    .focused($itemTitleInFocus)
-                    .font(.title2)
-                    .foregroundColor(Color("TextColor"))
-                Text(displayFrequency).myText().padding([.top])
-
+            VStack {
                 ZStack {
-                    Slider(value: $relativeFrequency, in: 0.0...1.0)
-                    HStack {
-                        Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
-                        Spacer()
-                        Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
-                        Spacer()
-                        Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
-                        Spacer()
-                        Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
-                        Spacer()
-                        Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
-                    }
-                }
-                
-                Text(lastPracticed).myText().padding([.top, .bottom])
+                    TextField("Item title", text: $title)
+                        .multilineTextAlignment(.center)
+                        .focused($itemTitleInFocus)
+                        .font(.title)
+                        .foregroundColor(Color("TextColor"))
+                        .padding()
 
-                Text("Notes").myText()
-                TextEditor(text: $notes)
-                    .frame(minHeight: geometry.size.height * 0.10,
-                           maxHeight: geometry.size.height * 0.20)
-                    .foregroundColor(Color("TextColor"))
+                    HStack {
+                        Button() {
+                            state.selectedItem = nil
+                        } label: {
+                            Image(systemName: "arrowshape.turn.up.backward").font(Font.system(.title)).padding()
+                        }
+
+                        Spacer()
+                    }
+                }.background(Color("HeaderColor"))
+                
+                VStack(alignment: .leading) {
+                    Text(displayFrequency).myText()
+
+                    ZStack {
+                        Slider(value: $relativeFrequency, in: 0.0...1.0)
+                        HStack {
+                            Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
+                            Spacer()
+                            Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
+                            Spacer()
+                            Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
+                            Spacer()
+                            Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
+                            Spacer()
+                            Rectangle().frame(width: 2.0, height: 12.0).foregroundColor(.blue)
+                        }
+                    }
+                    
+                    Text(lastPracticed).myText().padding([.top, .bottom])
+
+                    Text("Notes").myText()
+                    TextEditor(text: $notes)
+                        .frame(minHeight: geometry.size.height * 0.10,
+                               maxHeight: geometry.size.height * 0.20)
+                        .foregroundColor(Color("TextColor"))
+                        .border(.gray, width: 1)
+                }.padding()
             }
             .ignoresSafeArea(.keyboard)
-            .padding()
             .onAppear {
                 // Delay selecting title a bit, otherwise it doesn't receive focus
                 Task {
