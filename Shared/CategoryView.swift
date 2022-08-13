@@ -24,10 +24,16 @@ struct CategoryView: View {
     // sortedItems is State for animation purposes
     @State var sortedItems: [Item] = []
     
+    init(category: Category) {
+        self.category = category
+        let name = category.name ?? ""
+        self._title = State(initialValue: name == "New Category" ? "" : name)
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                TextField(title, text: $title)
+                TextField("Category title", text: $title)
                     .multilineTextAlignment(.center)
                     .focused($categoryTitleInFocus)
                     .font(.title)
@@ -59,21 +65,23 @@ struct CategoryView: View {
                 }
             }.background(Color("HeaderColor"))
 
-            if title == "New Category" {
+            if title == "" || sortedItems.isEmpty {
                 Spacer()
-                
-                Text("Set the name for this practice category by tapping on \"New Category\"")
-                    .myText()
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding()
-            }
-            if sortedItems.isEmpty {
-                Spacer()
-                
-                Text("Add your first practice item (examples: C Major Scale, Mary Had a Little Lamb, etc.)")
-                    .myText()
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding()
+
+                VStack(alignment: .leading) {
+                    if title == "" {
+                        Text("Set the name for this practice category by tapping on \"Category title\"")
+                            .myText()
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding()
+                    }
+                    if sortedItems.isEmpty {
+                        Text("Add your first practice item (examples: C Major Scale, Mary Had a Little Lamb, etc.) by clicking on the \"Add Practice Item\" button")
+                            .myText()
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding()
+                    }
+                }
             }
 
             let (mediumScore, highScore) = scoreColors()
@@ -105,8 +113,7 @@ struct CategoryView: View {
                 }
             }.padding()
         }.onAppear {
-            title = category.name ?? "New Category"
-            if title == "New Category" {
+            if title == "" {
                 categoryTitleInFocus = true
             }
         }.onChange(of: title) { newTitle in

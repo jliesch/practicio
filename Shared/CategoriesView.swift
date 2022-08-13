@@ -23,7 +23,7 @@ struct CategoriesView: View {
 
             if categories.isEmpty {
                 Spacer()
-                Text("Add your first category (examples: Exercises, New Pieces, Repertoire, etc.)").myText().padding()
+                Text("Add your first category (examples: Exercises, New Pieces, Repertoire, etc.) by clicking on the \"Add Category\" button").myText().padding()
             } else {
                 List {
                     ForEach(Array(categories.enumerated()), id: \.1.id) { (index, category) in
