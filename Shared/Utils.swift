@@ -17,16 +17,13 @@ func ItemAge(_ from: Date) -> Int {
 }
 
 func ItemScore(_ item: Item) -> Double {
-    if item.relativeFrequency < Constants.minFrequency {
-        item.relativeFrequency = Constants.minFrequency
-    } else if item.relativeFrequency > Constants.maxFrequency {
-        item.relativeFrequency = Constants.maxFrequency
-    }
+    // Clamp frequency to min/max as a sanity check
+    let freq = min(max(item.relativeFrequency, Constants.minFrequency), Constants.maxFrequency)
     var age: Int
     if let lp = item.lastPractice {
         age = ItemAge(lp)
     } else {
         age = Constants.defaultItemAge
     }
-    return Double(age) / item.relativeFrequency
+    return Double(age) / freq
 }

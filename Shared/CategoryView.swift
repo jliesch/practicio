@@ -88,61 +88,51 @@ struct CategoryView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(Array(sortedItems.enumerated()), id: \.1.id) { (index, item) in
-                            // Make sure the item is still available. It may have been deleted.
-                            // This is pretty hacky but it prevents a crash.
-                            if item.name != nil {
-                                let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
+                            let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
 
-                                HStack(alignment: .center) {
-                                    let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
-                                    if !practicedToday {
-                                        Button() {
-                                            // Practice today
-                                            item.lastLastPractice = item.lastPractice
-                                            item.lastPractice = Date()
-                                            try? moc.save()
-                                            withAnimation(.easeIn) {
-                                                sortedItems = sortItems()
-                                            }
-                                            state.changedCounter += 1
-                                        } label: {
-                                            Image(systemName: "circle").font(Font.system(.title2))
-                                        }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
+                            HStack(alignment: .center) {
+                                let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
+                                Button() {
+                                    if practicedToday {
+                                        // Undo today's practice
+                                        item.lastPractice = item.lastLastPractice
+                                        item.lastLastPractice = nil
                                     } else {
-                                        Button() {
-                                            // Undo practice today
-                                            item.lastPractice = item.lastLastPractice
-                                            item.lastLastPractice = nil
-                                            try? moc.save()
-                                            withAnimation(.easeIn) {
-                                                sortedItems = sortItems()
-                                            }
-                                            state.changedCounter += 1
-                                        } label: {
-                                            Image(systemName: "checkmark.circle").font(Font.system(.title2))
-                                        }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
+                                        // Practice today
+                                        item.lastLastPractice = item.lastPractice
+                                        item.lastPractice = Date()
                                     }
+                                    try? moc.save()
+                                    withAnimation(.easeIn) {
+                                        sortedItems = sortItems()
+                                    }
+                                    // Increment state counter. This catches an issue where the
+                                    // view will not update if the sort order does not change.
+                                    state.changedCounter += 1
+                                } label: {
+                                    let sfName = practicedToday ? "checkmark.circle" : "circle"
+                                    Image(systemName: sfName).font(Font.system(.title2))
+                                }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
 
-                                    let color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
-                                    Button() {
-                                        if state.selectedItem != nil && item.id == state.selectedItem!.id {
-                                            state.selectedItem = nil
-                                        } else {
-                                            state.selectedItem = item
-                                        }
-                                    } label: {
-                                        Text(item.name ?? "Unknown")
-                                            .foregroundColor(color)
-                                            .myText()
-                                            .strikethrough(practicedToday)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                let color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
+                                Button() {
+                                    if state.selectedItem != nil && item.id == state.selectedItem!.id {
+                                        state.selectedItem = nil
+                                    } else {
+                                        state.selectedItem = item
                                     }
-                                    .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
-                                    .padding([.leading])
+                                } label: {
+                                    Text(item.name ?? "Unknown")
+                                        .foregroundColor(color)
+                                        .myText()
+                                        .strikethrough(practicedToday)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                .padding()
-                                .background(backgroundColor)
+                                .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
+                                .padding([.leading])
                             }
+                            .padding()
+                            .background(backgroundColor)
                         }
                     }
                 }
