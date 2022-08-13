@@ -15,7 +15,6 @@ struct ItemView: View {
     @State var title: String
     @State var relativeFrequency: Double
     @State var notes: String
-    @State var deleteItem = false
     @FocusState private var itemTitleInFocus: Bool
     
     init(item: Item) {
@@ -30,16 +29,12 @@ struct ItemView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(alignment: .leading) {
-                
-                Spacer()
-
                 TextField("Item title", text: $title)
                     .focused($itemTitleInFocus)
                     .font(.title2)
                     .foregroundColor(Color("TextColor"))
-                Text(lastPracticed).myText().padding([.top, .bottom])
-                Text(displayFrequency).myText()
-                
+                Text(displayFrequency).myText().padding([.top])
+
                 ZStack {
                     Slider(value: $relativeFrequency, in: 0.0...1.0)
                     HStack {
@@ -55,28 +50,13 @@ struct ItemView: View {
                     }
                 }
                 
+                Text(lastPracticed).myText().padding([.top, .bottom])
+
                 Text("Notes").myText()
                 TextEditor(text: $notes)
                     .frame(minHeight: geometry.size.height * 0.10,
                            maxHeight: geometry.size.height * 0.20)
-                
-                Spacer()
-
-                HStack {
-                    Spacer()
-                    VStack {
-                        Button() {
-                            deleteItem = true
-                        } label: {
-                            VStack {
-                                Image(systemName: "trash").font(Font.system(.title))
-                                Text("Delete Item").myText().padding(3)
-                            }
-                        }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
-                            .padding()
-                    }
-                    Spacer()
-                }
+                    .foregroundColor(Color("TextColor"))
             }
             .ignoresSafeArea(.keyboard)
             .padding()
@@ -99,15 +79,6 @@ struct ItemView: View {
             }.onChange(of: notes) { newNotes in
                 item.notes = newNotes
                 try? moc.save()
-            }.alert(isPresented: $deleteItem) {
-                Alert(title: Text("Delete Item").myText(),
-                      message: Text("Delete this item. Are you sure?").myText(),
-                      primaryButton: .default(Text("Cancel")) { deleteItem = false },
-                      secondaryButton: .destructive(Text("Delete")) {
-                    moc.delete(item)
-                    try? moc.save()
-                    state.selectedItem = nil
-                })
             }
         }
     }

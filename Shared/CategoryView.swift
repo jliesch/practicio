@@ -79,61 +79,9 @@ struct CategoryView: View {
                 let (mediumScore, highScore) = scoreColors()
                 List {
                     ForEach(Array(sortedItems.enumerated()), id: \.1.id) { (index, item) in
+                        let color: Color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
                         let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
-
-                        HStack(alignment: .center) {
-                            let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
-                            Button() {
-                                if practicedToday {
-                                    // Undo today's practice
-                                    item.lastPractice = item.lastLastPractice
-                                    item.lastLastPractice = nil
-                                } else {
-                                    // Practice today
-                                    item.lastLastPractice = item.lastPractice
-                                    item.lastPractice = Date()
-                                }
-                                try? moc.save()
-                                withAnimation(.easeIn) {
-                                    sortedItems = sortItems()
-                                }
-                                // Increment state counter. This catches an issue where the
-                                // view will not update if the sort order does not change.
-                                state.changedCounter += 1
-                            } label: {
-                                let sfName = practicedToday ? "checkmark.circle" : "circle"
-                                Image(systemName: sfName).font(Font.system(.title2))
-                            }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
-
-                            let color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
-                            Button() {
-                                if state.selectedItem != nil && item.id == state.selectedItem!.id {
-                                    state.selectedItem = nil
-                                } else {
-                                    state.selectedItem = item
-                                }
-                            } label: {
-                                Text(item.name ?? "Unknown")
-                                    .foregroundColor(color)
-                                    .myText()
-                                    .strikethrough(practicedToday)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
-                            .padding([.leading])
-                        }
-                        .padding([.top, .bottom], 12.0)
-                        .listRowBackground(backgroundColor)
-                        .listRowSeparator(.hidden)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                moc.delete(item)
-                                try? moc.save()
-                                state.changedCounter += 1
-                            } label: {
-                              Label("Delete", systemImage: "trash")
-                            }
-                          }
+                        itemRow(item: item, color: color, backgroundColor: backgroundColor)
                     }
                 }.listStyle(.plain)
                 
@@ -231,5 +179,63 @@ struct CategoryView: View {
             return .primary
             #endif
         }
+    }
+    
+    func itemRow(item: Item, color: Color, backgroundColor: Color) -> some View {
+        HStack(alignment: .center) {
+            let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
+            Button() {
+                if practicedToday {
+                    // Undo today's practice
+                    item.lastPractice = item.lastLastPractice
+                    item.lastLastPractice = nil
+                } else {
+                    // Practice today
+                    item.lastLastPractice = item.lastPractice
+                    item.lastPractice = Date()
+                }
+                try? moc.save()
+                withAnimation(.easeIn) {
+                    sortedItems = sortItems()
+                }
+                // Increment state counter. This catches an issue where the
+                // view will not update if the sort order does not change.
+                state.changedCounter += 1
+            } label: {
+                let sfName = practicedToday ? "checkmark.circle" : "circle"
+                Image(systemName: sfName).font(Font.system(.title2))
+            }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
+
+            Button() {
+                if state.selectedItem != nil && item.id == state.selectedItem!.id {
+                    state.selectedItem = nil
+                } else {
+                    state.selectedItem = item
+                }
+            } label: {
+                HStack {
+                    Text(item.name ?? "Unknown")
+                        .foregroundColor(color)
+                        .myText()
+                        .strikethrough(practicedToday)
+                    Spacer()
+                    Image(systemName: "chevron.right").foregroundColor(.blue)
+                }
+            }
+            .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
+            .padding([.leading])
+        }.padding([.top, .bottom], 12.0)
+            //.listRowBackground(backgroundColor)
+            //.listRowSeparator(.hidden)
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                Button(role: .destructive) {
+                    moc.delete(item)
+                    try? moc.save()
+                    state.changedCounter += 1
+                } label: {
+                  Label("Delete", systemImage: "trash")
+                }
+              }
+
     }
 }

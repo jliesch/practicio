@@ -31,9 +31,12 @@ struct CategoriesView: View {
                         Button() {
                             state.selectedCategory = category
                         } label: {
-                            Text(category.name ?? "Unknown")
-                                .myText()
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            HStack {
+                                Text(category.name ?? "Unknown")
+                                    .myText()
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundColor(.blue)
+                            }
                         }
                         .padding([.top, .bottom], 15.0)
                         .listRowBackground(backgroundColor)
