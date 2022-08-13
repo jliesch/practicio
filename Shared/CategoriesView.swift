@@ -25,30 +25,36 @@ struct CategoriesView: View {
                 Spacer()
                 Text("Add your first category (examples: Exercises, New Pieces, Repertoire, etc.)").myText().padding()
             } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(categories.indices, id: \.self) { rowIndex in
-                            let category = categories[rowIndex]
-                            let backgroundColor: Color = rowIndex % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
-                            Button() {
-                                state.selectedCategory = category
-                            } label: {
-                                Text(category.name ?? "Unknown")
-                                    .myText()
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .padding([.leading, .trailing])
-                            .padding([.top, .bottom], 20.0)
-                            .background(backgroundColor)
-#if os(macOS)
-                            .foregroundColor(Color(NSColor.textColor))
-#else
-                            .foregroundColor(.primary)
-#endif
+                List {
+                    ForEach(Array(categories.enumerated()), id: \.1.id) { (index, category) in
+                        let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
+                        Button() {
+                            state.selectedCategory = category
+                        } label: {
+                            Text(category.name ?? "Unknown")
+                                .myText()
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        
-                    }.frame(maxWidth: .infinity)
-                }
+                        .padding([.top, .bottom], 15.0)
+                        .listRowBackground(backgroundColor)
+                        .listRowSeparator(.hidden)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                moc.delete(category)
+                                try? moc.save()
+                                state.changedCounter += 1
+                            } label: {
+                              Label("Delete", systemImage: "trash")
+                            }
+                          }
+#if os(macOS)
+                        .foregroundColor(Color(NSColor.textColor))
+#else
+                        .foregroundColor(.primary)
+#endif
+                    }
+                    
+                }.listStyle(.plain)
             }
         
             Spacer()
