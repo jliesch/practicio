@@ -25,86 +25,84 @@ struct CategoryView: View {
     @State var sortedItems: [Item] = []
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                ZStack {
-                    TextField(title, text: $title)
-                        .multilineTextAlignment(.center)
-                        .focused($categoryTitleInFocus)
-                        .font(.title)
-                        .foregroundColor(Color("TextColor")).padding()
+        VStack(spacing: 0) {
+            ZStack {
+                TextField(title, text: $title)
+                    .multilineTextAlignment(.center)
+                    .focused($categoryTitleInFocus)
+                    .font(.title)
+                    .foregroundColor(Color("TextColor")).padding()
 
-                    HStack(alignment: .center) {
-                        Button() {
-                            state.selectedCategory = nil
-                            state.selectedItem = nil
-                        } label: {
-                            Image(systemName: "arrowshape.turn.up.backward").font(Font.system(.title)).padding()
-                        }
-
-                        Spacer()
-
-                        Menu {
-                            Picker("Flavor", selection: $state.sortOrder) {
-                                Label("Sort Alphabetically", systemImage: "textformat.abc").tag(SortOrder.alphabetical)
-                                Label("Sort by Last Practiced", systemImage: "timer").tag(SortOrder.lastPracticed)
-                                Label("Sort by Frequency", systemImage: "waveform").tag(SortOrder.frequency)
-                                Label("Sort by Ranking", systemImage: "list.number").tag(SortOrder.score)
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis.circle").font(Font.system(.title))
-                        }
-                        .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
-                        .padding()
+                HStack(alignment: .center) {
+                    Button() {
+                        state.selectedCategory = nil
+                        state.selectedItem = nil
+                    } label: {
+                        Image(systemName: "arrowshape.turn.up.backward").font(Font.system(.title)).padding()
                     }
-                }.background(Color("HeaderColor"))
 
-                if title == "New Category" {
                     Spacer()
-                    
-                    Text("Set the name for this practice category by tapping on \"New Category\"")
-                        .myText()
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding()
-                }
-                if sortedItems.isEmpty {
-                    Spacer()
-                    
-                    Text("Add your first practice item (examples: C Major Scale, Mary Had a Little Lamb, etc.)")
-                        .myText()
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding()
-                }
 
-                let (mediumScore, highScore) = scoreColors()
-                List {
-                    ForEach(Array(sortedItems.enumerated()), id: \.1.id) { (index, item) in
-                        let color: Color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
-                        let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
-                        itemRow(item: item, color: color, backgroundColor: backgroundColor)
+                    Menu {
+                        Picker("Flavor", selection: $state.sortOrder) {
+                            Label("Sort Alphabetically", systemImage: "textformat.abc").tag(SortOrder.alphabetical)
+                            Label("Sort by Last Practiced", systemImage: "timer").tag(SortOrder.lastPracticed)
+                            Label("Sort by Frequency", systemImage: "waveform").tag(SortOrder.frequency)
+                            Label("Sort by Ranking", systemImage: "list.number").tag(SortOrder.score)
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle").font(Font.system(.title))
                     }
-                }.listStyle(.plain)
-                
+                    .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
+                    .padding()
+                }
+            }.background(Color("HeaderColor"))
+
+            if title == "New Category" {
                 Spacer()
                 
-                Button() {
-                    let item = Item(context: moc)
-                    item.id = UUID()
-                    item.categoryId = category.id
-                    item.name = "New Item"
-                    item.category = category
-                    try? moc.save()
-                    state.selectedItem = item
-                    state.changedCounter += 1
-                } label: {
-                    VStack {
-                        Image(systemName: "plus.square.on.square").font(Font.system(.largeTitle))
-                        Text("Add Practice Item")
-                            .myText()
-                            .padding(3)
-                    }
-                }.padding()
+                Text("Set the name for this practice category by tapping on \"New Category\"")
+                    .myText()
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding()
             }
+            if sortedItems.isEmpty {
+                Spacer()
+                
+                Text("Add your first practice item (examples: C Major Scale, Mary Had a Little Lamb, etc.)")
+                    .myText()
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding()
+            }
+
+            let (mediumScore, highScore) = scoreColors()
+            List {
+                ForEach(Array(sortedItems.enumerated()), id: \.1.id) { (index, item) in
+                    let color: Color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
+                    let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
+                    itemRow(item: item, color: color, backgroundColor: backgroundColor)
+                }
+            }.listStyle(.plain)
+            
+            Spacer()
+            
+            Button() {
+                let item = Item(context: moc)
+                item.id = UUID()
+                item.categoryId = category.id
+                item.name = "New Item"
+                item.category = category
+                try? moc.save()
+                state.selectedItem = item
+                state.changedCounter += 1
+            } label: {
+                VStack {
+                    Image(systemName: "plus.square.on.square").font(Font.system(.largeTitle))
+                    Text("Add Practice Item")
+                        .myText()
+                        .padding(3)
+                }
+            }.padding()
         }.onAppear {
             title = category.name ?? "New Category"
             if title == "New Category" {
