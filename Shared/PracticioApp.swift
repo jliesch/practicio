@@ -33,7 +33,7 @@ class AppState: ObservableObject {
 
 extension Text {
     func myTitle() -> Text {
-        return self.font(.title).foregroundColor(Color("TextColor"))
+        return self.font(.title2).foregroundColor(Color("TextColor"))
     }
 
     func myText() -> Text {

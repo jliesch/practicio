@@ -33,8 +33,9 @@ struct ItemView: View {
                     TextField("Item title", text: $title)
                         .multilineTextAlignment(.center)
                         .focused($itemTitleInFocus)
-                        .font(.title)
+                        .font(.title2)
                         .foregroundColor(Color("TextColor"))
+                        .frame(maxWidth: geometry.size.width * 0.7)
                         .padding()
 
                     HStack {
