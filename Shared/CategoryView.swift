@@ -11,10 +11,10 @@ import SwiftUI
 struct CategoryView: View {
     @EnvironmentObject var state: AppState
     let category: Category
-
+    
     @State var title: String = ""
     @Environment(\.managedObjectContext) var moc
-        
+    
     @FocusState private var categoryTitleInFocus: Bool
     
     var items: [Item] {
@@ -36,10 +36,10 @@ struct CategoryView: View {
                 TextField("Category title", text: $title)
                     .multilineTextAlignment(.center)
                     .focused($categoryTitleInFocus)
-                    .font(.title)
+                    .font(.title2)
                     .foregroundColor(Color("TextColor"))
                     .padding()
-
+                
                 HStack(alignment: .center) {
                     Button() {
                         state.selectedCategory = nil
@@ -47,9 +47,9 @@ struct CategoryView: View {
                     } label: {
                         Image(systemName: "arrowshape.turn.up.backward").font(Font.system(.title)).padding()
                     }
-
+                    
                     Spacer()
-
+                    
                     Menu {
                         Picker("Flavor", selection: $state.sortOrder) {
                             Label("Sort Alphabetically", systemImage: "textformat.abc").tag(SortOrder.alphabetical)
@@ -64,10 +64,10 @@ struct CategoryView: View {
                     .padding()
                 }
             }.background(Color("HeaderColor"))
-
+            
             if title == "" || sortedItems.isEmpty {
                 Spacer()
-
+                
                 VStack(alignment: .leading) {
                     if title == "" {
                         Text("Set the name for this practice category by tapping on \"Category title\"")
@@ -83,13 +83,12 @@ struct CategoryView: View {
                     }
                 }
             }
-
+            
             let (mediumScore, highScore) = scoreColors()
             List {
                 ForEach(Array(sortedItems.enumerated()), id: \.1.id) { (index, item) in
                     let color: Color = itemColor(item: item, mediumScore: mediumScore, highScore: highScore)
-                    let backgroundColor: Color = index % 2 == 0 ? .white.opacity(0.0) : Color("StripeColor")
-                    itemRow(item: item, color: color, backgroundColor: backgroundColor)
+                    itemRow(item, color: color)
                 }
             }.listStyle(.plain)
             
@@ -134,14 +133,14 @@ struct CategoryView: View {
     
     func sortItems() -> [Item] {
         switch state.sortOrder {
-            case .alphabetical:
-                return items.sorted(by: { $0.name ?? "" < $1.name ?? "" })
-            case  .lastPracticed:
-                return items.sorted(by: { $0.lastPractice ?? .distantPast < $1.lastPractice ?? .distantPast })
-            case .frequency:
-                return items.sorted(by: { $0.relativeFrequency < $1.relativeFrequency })
-            case .score:
-                return items.sorted(by: { ItemScore($0) > ItemScore($1) })
+        case .alphabetical:
+            return items.sorted(by: { $0.name ?? "" < $1.name ?? "" })
+        case  .lastPracticed:
+            return items.sorted(by: { $0.lastPractice ?? .distantPast < $1.lastPractice ?? .distantPast })
+        case .frequency:
+            return items.sorted(by: { $0.relativeFrequency < $1.relativeFrequency })
+        case .score:
+            return items.sorted(by: { ItemScore($0) > ItemScore($1) })
         }
     }
     
@@ -174,15 +173,15 @@ struct CategoryView: View {
         } else if score > mediumScore {
             return Color("MediumScoreColor")
         } else {
-            #if os(macOS)
+#if os(macOS)
             return Color(NSColor.textColor)
-            #else
+#else
             return .primary
-            #endif
+#endif
         }
     }
     
-    func itemRow(item: Item, color: Color, backgroundColor: Color) -> some View {
+    func itemRow(_ item: Item, color: Color) -> some View {
         HStack(alignment: .center) {
             let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
             Button() {
@@ -206,7 +205,7 @@ struct CategoryView: View {
                 let sfName = practicedToday ? "checkmark.circle" : "circle"
                 Image(systemName: sfName).font(Font.system(.title2))
             }.buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
-
+            
             Button() {
                 if state.selectedItem != nil && item.id == state.selectedItem!.id {
                     state.selectedItem = nil
@@ -214,38 +213,55 @@ struct CategoryView: View {
                     state.selectedItem = item
                 }
             } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(item.name ?? "Unknown")
-                                .foregroundColor(color)
-                                .myText()
-                                .strikethrough(practicedToday)
-                            Spacer()
-                        }
-                        if let notes = item.notes {
-                            Text(notes)
-                                .foregroundColor(.gray)
-                                .myText()
-                        }
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(item.name ?? "Unknown")
+                            .foregroundColor(color)
+                            .myText()
+                            .strikethrough(practicedToday)
+                        Spacer()
                     }
-                    Image(systemName: "chevron.right").foregroundColor(.blue)
+                    if let notes = item.notes {
+                        Text(notes)
+                            .foregroundColor(.gray)
+                            .myText()
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding([.top], 3)
+                    }
                 }
             }
             .buttonStyle(BorderlessButtonStyle())  // Prevent multiple buttons from being clicked
             .padding([.leading])
-        }.padding([.top, .bottom], 12.0)
-            //.listRowBackground(backgroundColor)
-            //.listRowSeparator(.hidden)
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(role: .destructive) {
-                    moc.delete(item)
-                    try? moc.save()
-                    state.changedCounter += 1
-                } label: {
-                  Label("Delete", systemImage: "trash")
-                }
-              }
-
+        }
+        .padding([.top, .bottom], 12.0)
+        .badge(itemBadge(item))
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                moc.delete(item)
+                try? moc.save()
+                state.changedCounter += 1
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+    
+    func itemBadge(_ item: Item) -> String {
+        switch state.sortOrder {
+        case .alphabetical:
+            return ""
+        case .lastPracticed:
+            if let lp = item.lastPractice {
+                return String(ItemAge(lp))
+            } else {
+                return ""
+            }
+        case .frequency:
+            let displayFrequency: Double = round(10.0 / item.relativeFrequency) / 10.0
+            return String(format: "%.1fx", displayFrequency)
+        case .score:
+            return ""
+        }
     }
 }
