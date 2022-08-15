@@ -30,7 +30,7 @@ struct ItemView: View {
         GeometryReader { geometry in
             VStack {
                 ZStack {
-                    TextField("Item title", text: $title)
+                    TextField("New item", text: $title)
                         .multilineTextAlignment(.center)
                         .focused($itemTitleInFocus)
                         .font(.title2)

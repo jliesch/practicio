@@ -33,7 +33,7 @@ struct CategoryView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                TextField("Category title", text: $title)
+                TextField("New Category", text: $title)
                     .multilineTextAlignment(.center)
                     .focused($categoryTitleInFocus)
                     .font(.title2)
