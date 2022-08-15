@@ -185,15 +185,7 @@ struct CategoryView: View {
         HStack(alignment: .center) {
             let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
             Button() {
-                if practicedToday {
-                    // Undo today's practice
-                    item.lastPractice = item.lastLastPractice
-                    item.lastLastPractice = nil
-                } else {
-                    // Practice today
-                    item.lastLastPractice = item.lastPractice
-                    item.lastPractice = Date()
-                }
+                togglePracticed(item)
                 try? moc.save()
                 withAnimation(.easeIn) {
                     sortedItems = sortItems()
@@ -236,7 +228,14 @@ struct CategoryView: View {
         }
         .padding([.top, .bottom], 12.0)
         .badge(itemBadge(item))
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+        .swipeActions(edge: .trailing) {
+            Button() {
+                togglePracticed(item)
+                try? moc.save()
+                state.changedCounter += 1
+            } label: {
+                Label("Practiced", systemImage: "checkmark")
+            }.tint(.green)
             Button(role: .destructive) {
                 moc.delete(item)
                 try? moc.save()
@@ -244,6 +243,19 @@ struct CategoryView: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+        }
+    }
+    
+    func togglePracticed(_ item: Item) {
+        let practicedToday = ItemAge(item.lastPractice ?? .distantPast) == 0
+        if practicedToday {
+            // Undo today's practice
+            item.lastPractice = item.lastLastPractice
+            item.lastLastPractice = nil
+        } else {
+            // Practice today
+            item.lastLastPractice = item.lastPractice
+            item.lastPractice = Date()
         }
     }
     
