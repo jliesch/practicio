@@ -69,7 +69,7 @@ struct ItemView: View {
                     
                     Text(lastPracticed).myText().padding([.top, .bottom])
 
-                    Text("Notes").myText()
+                    Text("Notes:").myText()
                     TextEditor(text: $notes)
                         .frame(minHeight: geometry.size.height * 0.10,
                                maxHeight: geometry.size.height * 0.20)
@@ -79,12 +79,8 @@ struct ItemView: View {
             }
             .ignoresSafeArea(.keyboard)
             .onAppear {
-                // Delay selecting title a bit, otherwise it doesn't receive focus
-                Task {
-                    try await Task.sleep(nanoseconds: 1_000_000_000)
-                    if title == "" {
-                        itemTitleInFocus = true
-                    }
+                if title == "" {
+                    itemTitleInFocus = true
                 }
             }.onChange(of: title) { newTitle in
                 item.name = newTitle
